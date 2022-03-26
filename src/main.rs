@@ -7,7 +7,7 @@ fn main() {
     stdout().flush().unwrap();
     stdin().read_line(&mut input).unwrap();
     let mut min_multiplicity_log = String::new();
-    print!("Enter the minimum multiplicity to log the number (e.g. 2, 3, 9, 11): ");
+    print!("Enter the minimum multiplicity to break at (e.g. 2, 9, 111): ");
     stdout().flush().unwrap();
     stdin().read_line(&mut min_multiplicity_log).unwrap();
     let min_multiplicity_log_num = min_multiplicity_log.trim().parse().unwrap();
@@ -15,19 +15,37 @@ fn main() {
     let inp = inp.trim();
 
     let num_digits = parse_num_digits(inp.to_string());
-    if num_digits >= 3 {
-        println!(
-            "🟠 About to test {:?} numbers...",
-            749_usize.pow((num_digits - 3).try_into().unwrap())
-        );
-    }
-    let num_vec = create_number_strings(num_digits);
-    for num in num_vec {
-        let num_steps = multiplicity_persistence(&num);
-        if num_steps > min_multiplicity_log_num {
-            println!("🔵 Multiplicity = {}, Number = {}", num_steps, num);
-            break;
+    let twos = "2".repeat(num_digits);
+    let start = twos.parse::<usize>().unwrap();
+    println!("{}", start);
+    let end = usize::MAX - 1;
+    let max_till_alloc = 22222222;
+    let mut highest_checked = start + max_till_alloc;
+    while highest_checked < end {
+        let num_vec = create_number_strings(highest_checked, highest_checked + max_till_alloc);
+        println!("\n🔵 Starting test...");
+        let len_of_vec = num_vec.len();
+        let mut c = 0;
+        for num in num_vec {
+            // Print progress every 2%
+            if c % (len_of_vec / 50) == 0 {
+                print!("\r🟡 {:?}%", c * 100 / len_of_vec);
+                stdout().flush().unwrap();
+            }
+            let num_steps = multiplicity_persistence(&num);
+            if num_steps >= min_multiplicity_log_num {
+                println!("\n🔵 Multiplicity = {}, Number = {}", num_steps, num);
+                break;
+            }
+            if c == len_of_vec - 1 {
+                println!(
+                    "\n🔴 No numbers found with multiplicity > {}\n",
+                    min_multiplicity_log_num
+                );
+            }
+            c += 1;
         }
+        highest_checked += max_till_alloc;
     }
 }
 
@@ -50,22 +68,32 @@ fn multiplicity_persistence(strn: &String) -> usize {
 }
 
 /// Vec of all numbers with `digits` digits
-/// Does not include the numbers 1 or 5
+/// Does not include the digits 0, 1, or 5
 /// Numbers are sorted in ascending order
-/// Numbers are split into groups of 19 digits
-fn create_number_strings(digits: usize) -> Vec<String> {
-    let mut num_vec: Vec<String> = Vec::with_capacity(10_usize.pow(digits as u32));
-    let twos = "2".repeat(digits);
-    let nines = "9".repeat(digits);
-    let start = twos.parse::<usize>().unwrap();
-    let end = nines.parse::<usize>().unwrap();
+fn create_number_strings(start: usize, end: usize) -> Vec<String> {
+    // Currently, this over-allocates the vector.
+    // Need to confirm if it is correct to use:
+    // 749_usize.pow((digits - 3).try_into().unwrap())
+    let total_num = end - start;
+    println!("\n🔵 Allocating memory for {}...", total_num);
+    let mut num_vec: Vec<String> = Vec::with_capacity(total_num);
+
+    let mut i = 0;
+    let percent = (end - start) / 50;
     for num in start..=end {
+        // Print progress every 2%
+        if i % percent == 0 {
+            print!("\r🟡 {:?}%", i * 100 / total_num);
+            stdout().flush().unwrap();
+        }
         let num_str = num.to_string();
+        i += 1;
         if num_str.contains('5') || num_str.contains('1') || num_str.contains('0') {
             continue;
         }
         num_vec.push(num_str);
     }
+    println!("\n🔵 Memory allocated and used.");
     num_vec
 }
 

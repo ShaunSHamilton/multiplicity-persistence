@@ -11,6 +11,12 @@ Enter the minimum multiplicity to log the number (e.g. 2, 3, 9, 11): 5
 🔵 Multiplicity = 6, Number = 2222378
 ```
 
+```bash
+# Using release mode
+$ cargo build --release
+$ ./target/release/multi-pers
+```
+
 ## Notes
 
 - Maximum number possible to represent by `u32`: `2^32 - 1 = 4294967295` (10 digits)
@@ -18,3 +24,10 @@ Enter the minimum multiplicity to log the number (e.g. 2, 3, 9, 11): 5
 - Maximum number possible to represent by `u128`: `2^128 - 1 = 340282366920938463463374607431768211455` (40 digits)
 
 - Digits to avoid: `1`, `5`, and `0`
+
+## Algorithms
+
+### Random
+
+On one thread, generate a buffer of random numbers.
+On another thread, calculate the multiplicity of the numbers in the buffer.
